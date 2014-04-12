@@ -123,6 +123,6 @@ module PeijiSan
   private
   
   def _use_scoped?
-    !const_defined?(:ActiveRecord) || ActiveRecord::VERSION::MAJOR < 4
+    respond_to?(:scoped) && (!Object.const_defined?(:ActiveRecord) || ActiveRecord::VERSION::MAJOR < 4)
   end
 end
