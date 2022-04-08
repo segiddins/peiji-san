@@ -15,7 +15,7 @@
 # See PeijiSan::PaginationMethods and PeijiSan::ViewHelper for more info.
 module PeijiSan
   ENTRIES_PER_PAGE = 32
-  
+
   # The page scope is extended with the PaginationMethods. This means that all
   # methods defined on this module will be available on the resulting
   # collection.
@@ -24,46 +24,46 @@ module PeijiSan
   #   collection.has_next_page?
   module PaginationMethods
     attr_accessor :current_page, :entries_per_page, :scope_without_pagination
-    
+
     # Returns whether or not the given page is the current page.
     def current_page?(page)
       @current_page == page
     end
-    
+
     # Returns whether or not there is a next page for the current scope.
     def has_next_page?
       @current_page < page_count
     end
-    
+
     # Returns whether or not there is a previous page for the current scope.
     def has_previous_page?
       @current_page != 1
     end
-    
+
     # Returns the next page number if there is a next page, returns +nil+
     # otherwise.
     def next_page
       @current_page + 1 if has_next_page?
     end
-    
+
     # Returns the previous page number if there is a previous page, returns
     # +nil+ otherwise.
     def previous_page
       @current_page - 1 if has_previous_page?
     end
-    
+
     # Returns the row count for all the rows that would match the current
     # scope, so not only on the current page.
     def unpaged_count
       scope_without_pagination.count
     end
-    
+
     # Returns the number of pages for the current scope.
     def page_count
       (unpaged_count.to_f / @entries_per_page).ceil
     end
   end
-  
+
   # Sets the number of entries you want per page.
   #
   #   class Member < ActiveRecord::Base
@@ -73,7 +73,7 @@ module PeijiSan
   def entries_per_page=(entries)
     @entries_per_page = entries
   end
-  
+
   # Returns the number of entries you want per page.
   #
   #   class Member < ActiveRecord::Base
@@ -84,7 +84,7 @@ module PeijiSan
   def entries_per_page
     @entries_per_page
   end
-  
+
   # Set the current scope to a given page number.
   #
   # Consider:
@@ -109,19 +109,38 @@ module PeijiSan
   def page(page, entries_per_page=nil)
     page = page.blank? ? 1 : page.to_i
     entries_per_page = entries_per_page || self.entries_per_page || ENTRIES_PER_PAGE
-    
-    entries = limit(entries_per_page).offset((page - 1) * entries_per_page)
 
-    entries.extend(PeijiSan::PaginationMethods)
+    entries = Wrapper.new(
+      limit(entries_per_page).offset((page - 1) * entries_per_page)
+    )
+
     entries.current_page = page
     entries.entries_per_page = entries_per_page
     entries.scope_without_pagination = _use_scoped? ? scoped : all
 
     entries
   end
-  
+
+  class Wrapper
+    include PeijiSan::PaginationMethods
+
+    def initialize(entries)
+      @entries = entries
+    end
+
+    private
+
+    def respond_to_missing?(name, include_private = false)
+      @entries.respond_to?(name, include_private)
+    end
+
+    def method_missing(method, *args, &block)
+      @entries.send(method, *args, &block)
+    end
+  end
+
   private
-  
+
   def _use_scoped?
     respond_to?(:scoped) && (!Object.const_defined?(:ActiveRecord) || ActiveRecord::VERSION::MAJOR < 4)
   end

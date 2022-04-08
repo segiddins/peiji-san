@@ -38,6 +38,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake"
   s.add_development_dependency "rack-test"
   s.add_development_dependency "rdoc"
+  s.add_development_dependency "rexml"
 
   # Rails
   s.add_development_dependency "activesupport", ">= 3.1"
@@ -51,6 +52,6 @@ Gem::Specification.new do |s|
   # Sinatra
   s.add_development_dependency "sinatra"
   # There needs to be a new release for this
-  s.add_development_dependency "tobias-sinatra-url-for"
+  s.add_development_dependency "sinatra-url-for"
 end
 
